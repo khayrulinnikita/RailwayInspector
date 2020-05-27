@@ -1,12 +1,14 @@
-#include "gprs.h"
+
 #include "mbed.h"
 
 
 char Phone_No[11]="";
-char Direction = "";
+char Direction;
 uint16_t Distace_to_Start = 0;
 uint16_t Length_of_Diagnostic = 0;
 uint16_t Distance_to_Home = 0;
+
+Timer t;
 
 InterruptIn risingEdge(PB_5);
  
@@ -18,16 +20,16 @@ DigitalOut drive2(PB_13);
 DigitalOut reverse1(PB_14);
 DigitalOut reverse2(PB_15);
 
-DigitalIn Lock(PB_17);
+DigitalIn Lock(PB_4);
 
 
-PwmOut throttle(PB_11);
-PwmOut brake(PB_10);
+PwmOut throttle(PC_11);
+PwmOut brake(PC_10);
 
 
 
 Serial pc(USBTX, USBRX);
-GPRS gprs(PB_6,PB_7,9600,Phone_No);
+//GPRS gprs(PB_6,PB_7,9600,Phone_No);
 char Reply[100]={'\0'};
 
  
@@ -71,7 +73,7 @@ void Input_params() {
         pc.printf("Выключите замок зажигания");
     } else {
         pc.printf("Инспектор путей \n Перед началом работы введите параметры для диагностики n\ Направление диагностики (FRONT/REVERSE)");
-        Direction = pc.getc();
+        Direction += pc.getc();
         pc.printf("Расстояние до начала диагностики (м)");
         Distace_to_Start = pc.getc();
         pc.printf("Длина диагностирумого участка (м)");
@@ -84,44 +86,46 @@ void Input_params() {
 void Drive() {
     drive1 = 1;
     drive2 = 1;
-    throttle.write(20%);
-    sleep(2000);
-    throttle.write(40%);
-    sleep(2000);
-    throttle.write(80%);
-    sleep(2000);
-    throttle.write(100%);
+    throttle.write(0.2);
+    wait(2);
+    throttle.write(0.4);
+    wait(2);
+    throttle.write(0.8);
+    wait(2);
+    throttle.write(1);
 }
 
-void Drive() {
+void Reverse() {
     reverse1 = 1;
     reverse2 = 1;
-    throttle.write(20%);
-    sleep(2000);
-    throttle.write(40%);
-    sleep(2000);
-    throttle.write(80%);
-    sleep(2000);
-    throttle.write(100%);
+    throttle.write(0.2);
+    wait(2);
+    throttle.write(0.4);
+    wait(2);
+    throttle.write(0.8);
+    wait(2);
+    throttle.write(1);
+}
+
+void Stop() {
+    brake.write(1);
 }
 
 void Test() {
     Drive();
-    sleep(1000);
+    wait(1);
     Reverse();
-    sleep(1000);
+    wait(1);
     Stop();
 }
 
-void Stop() {
-    brake.write(100%);
-}
+
 
 int main() {
     Init_GPRS();
     Input_params();
     
-    if(msg == 'brake') {
+    if('as' == 'brake') {
        Stop();
     }
     
@@ -134,9 +138,9 @@ int main() {
             ;
         }     
         t.stop();
-        uint32_t temp += c;
+        uint32_t temp = c;
         pc.printf("Count: %d", temp);
-        double circumference = 0.25 * 3.1416; // 25 cm wheel diameter * pi 
+        double circumference = 0.25 * 3.1416;
         double rev = (double)c;
         double rpm = rev*60;
         double speed = circumference * rev;  
@@ -149,11 +153,11 @@ int main() {
         brake.period(0.02);
      
         if (Lock.read() == 1) {
-            if (Direction == "Front") {
+            if (Direction == 'Front') {
                 while(temp <= Distace_to_Start + Length_of_Diagnostic) {
                    Drive();
                 }
-            } else if (Direction = "Reverse") {
+            } else if (Direction = 'Reverse') {
                 while(temp <= Distace_to_Start + Length_of_Diagnostic) {
                    Reverse();
                 }
