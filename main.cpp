@@ -3,6 +3,7 @@
 
 
 char Phone_No[11]="";
+string Direction = "";
 
 InterruptIn risingEdge(PB_5);
  
@@ -20,8 +21,8 @@ PwmOut brake(PB_10);
 
 
 
-Serial      pc(PA_2, PA_3);
-GPRS   gprs(PB_6,PB_7,9600,Phone_No);
+Serial pc(USBTX, USBRX);
+GPRS gprs(PB_6,PB_7,9600,Phone_No);
 char Reply[100]={'\0'};
 
  
@@ -36,9 +37,10 @@ void pulses() {
     c++;
 }
 
-
 int main() {
-
+ 
+    pc.printf("Инспектор путей \n Перед началом работы введите параметры для диагностики n\ Укажите направление диагностики (FRONT/REVERSE)");
+    Direction = pc.getc();
     risingEdge.rise(&pulses); 
     while(1) {
         throttle.period(0.02);
